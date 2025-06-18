@@ -2,52 +2,72 @@ name: Terraform Deploy to AWS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # main 브랜치 푸시 시 자동 apply
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose Terraform action (default: apply)"
+        required: false
+        default: "apply"
+        type: choice
+        options:
+          - apply
+          - destroy
 
 jobs:
   terraform:
-    name: "Terraform Apply"
+    name: "Terraform Deploy"
     runs-on: ubuntu-latest
 
     env:
       AWS_REGION: ap-northeast-2
 
     steps:
-    - name: Checkout repository
+    - name: 📥 Checkout repository
       uses: actions/checkout@v3
 
-    - name: Setup Terraform
+    - name: 🔧 Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.5.7
 
-    - name: Configure AWS credentials
+    - name: 🔐 Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Terraform Init with Backend
+    - name: ⚙️ Terraform Init with Backend
       working-directory: infra
       run: |
         echo "🔧 Running terraform init..."
         terraform init -no-color
 
-    - name: Terraform Validate
+    - name: ✅ Terraform Validate
       working-directory: infra
       run: |
         echo "🧪 Running terraform validate..."
         terraform validate -no-color
 
-    - name: Terraform Plan
+    - name: 📝 Terraform Plan
       working-directory: infra
       run: |
-        echo "📝 Running terraform plan..."
+        echo "📐 Running terraform plan..."
         terraform plan -input=false -no-color
 
-    - name: Terraform Apply
+    - name: 🚀 Terraform Apply or Destroy
       working-directory: infra
       run: |
-        echo "🚀 Running terraform apply..."
-        terraform apply -input=false -auto-approve -no-color
+        echo "⚡ Running terraform action..."
+        ACTION="${{ github.event.inputs.action || 'apply' }}"
+        echo "Selected action: $ACTION"
+
+        if [ "$ACTION" = "apply" ]; then
+          terraform apply -input=false -auto-approve -no-color
+        elif [ "$ACTION" = "destroy" ]; then
+          terraform destroy -input=false -auto-approve -no-color
+        else
+          echo "❌ Invalid action: $ACTION"
+          exit 1
+        fi
