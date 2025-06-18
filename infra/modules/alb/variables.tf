@@ -8,9 +8,9 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "public_subnet_id" {
-  description = "Public Subnet ID for ALB"
-  type        = string
+variable "public_subnets" {
+  description = "List of public subnet IDs for ALB across multiple AZs"
+  type        = list(string)
 }
 
 variable "target_port" {

@@ -23,7 +23,7 @@ resource "aws_ecs_service" "service" {
   desired_count   = 1
 
   network_configuration {
-    subnets         = [var.private_subnet_id]
+    subnets         = var.private_subnets        # ✅ 단일 → 리스트
     security_groups = [var.alb_sg_id]
     assign_public_ip = false
   }

@@ -25,7 +25,7 @@ resource "aws_security_group" "alb_sg" {
 resource "aws_lb" "alb" {
   name               = "${var.name}-alb"
   load_balancer_type = "application"
-  subnets            = [var.public_subnet_id]
+  subnets            = var.public_subnets         # ✅ 리스트 형태로 변경
   security_groups    = [aws_security_group.alb_sg.id]
 
   tags = {
@@ -34,10 +34,11 @@ resource "aws_lb" "alb" {
 }
 
 resource "aws_lb_target_group" "tg" {
-  name     = "${var.name}-tg"
-  port     = 3000                          # ✅ 변경: Node.js 앱 포트에 맞춤
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
+  name        = "${var.name}-tg"
+  port        = 3000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"                              # ✅ awsvpc 모드 호환을 위해 반드시 필요
 
   health_check {
     path                = "/"

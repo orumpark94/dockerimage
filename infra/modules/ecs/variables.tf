@@ -8,9 +8,9 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "private_subnet_id" {
-  description = "Private Subnet ID for ECS tasks"
-  type        = string
+variable "private_subnets" {
+  description = "List of private subnet IDs for ECS tasks"
+  type        = list(string)
 }
 
 variable "alb_sg_id" {
@@ -23,9 +23,8 @@ variable "tg_arn" {
   type        = string
 }
 
-# ✅ 추가적으로 명확히 하고 싶다면, 포트를 변수로 뺄 수도 있습니다:
 variable "container_port" {
-  description = "Port on which the container listens (Node.js: 3000)"
+  description = "Port on which the container listens (e.g., 3000 for Node.js)"
   type        = number
   default     = 3000
 }
