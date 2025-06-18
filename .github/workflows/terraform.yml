@@ -30,7 +30,7 @@ jobs:
 
     - name: Terraform Init with Backend
       working-directory: infra
-      run: terraform init
+      run: terraform init   
 
     - name: Terraform Validate
       working-directory: infra
@@ -38,8 +38,8 @@ jobs:
 
     - name: Terraform Plan
       working-directory: infra
-      run: terraform plan -var-file="terraform.tfvars"
+      run: terraform plan
 
     - name: Terraform Apply
       working-directory: infra
-      run: terraform apply -auto-approve -var-file="terraform.tfvars"
+      run: terraform apply -auto-approve
