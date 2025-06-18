@@ -1,30 +1,27 @@
 variable "name" {
-  description = "Name prefix for ECS resources"
-  type        = string
+  type = string
 }
 
-variable "vpc_id" {
-  description = "VPC ID where ECS will be deployed"
-  type        = string
-}
-
-variable "private_subnets" {
-  description = "List of private subnet IDs for ECS tasks"
-  type        = list(string)
-}
-
-variable "alb_sg_id" {
-  description = "Security Group ID from ALB"
-  type        = string
-}
-
-variable "tg_arn" {
-  description = "Target Group ARN from ALB"
+variable "image" {
+  description = "Docker image for ECS task"
   type        = string
 }
 
 variable "container_port" {
-  description = "Port on which the container listens (e.g., 3000 for Node.js)"
+  description = "Container port to expose"
   type        = number
-  default     = 3000
+}
+
+variable "private_subnets" {
+  type = list(string)
+}
+
+variable "tg_arn" {
+  description = "ALB Target Group ARN"
+  type        = string
+}
+
+variable "sg_id" {
+  description = "ECS Service에 적용할 보안 그룹 ID"
+  type        = string
 }
