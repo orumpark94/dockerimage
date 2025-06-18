@@ -18,3 +18,13 @@ variable "target_port" {
   type        = number
   default     = 3000
 }
+
+variable "sg_id" {
+  description = "ALB 보안 그룹 ID"
+  type        = string
+}
+
+variable "target_port" {
+  description = "ECS 컨테이너에서 수신할 포트 번호 (ex: 3000)"
+  type        = number
+}
