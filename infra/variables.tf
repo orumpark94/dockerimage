@@ -27,3 +27,16 @@ variable "availability_zones" {
   type        = list(string)
   default     = ["ap-northeast-2a", "ap-northeast-2c"]
 }
+
+# 🔽 새로 추가할 변수
+variable "container_port" {
+  description = "Port exposed by the container and used by ALB TG"
+  type        = number
+  default     = 3000
+}
+
+variable "image" {
+  description = "Docker image used in ECS task"
+  type        = string
+  default     = "baram940/devops-test:1.0"
+}
