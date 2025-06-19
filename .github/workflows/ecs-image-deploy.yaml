@@ -1,0 +1,78 @@
+name: Deploy or Rollback ECS Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      action_type:
+        description: "Select action: update or rollback"
+        required: true
+        default: "update"
+        type: choice
+        options:
+          - update
+          - rollback
+
+      image_tag:
+        description: "Enter Docker Image Tag (e.g., 2.0, 1.0)"
+        required: true
+        default: "2.0"
+
+env:
+  AWS_REGION: ap-northeast-2
+  IMAGE_NAME: baram940/devops-test
+  CLUSTER_NAME: my-app-cluster
+  SERVICE_NAME: my-app-service
+  CONTAINER_NAME: app
+
+jobs:
+  ecs-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Install jq
+      run: sudo apt-get install -y jq
+
+    - name: Register ECS Task Definition
+      id: register
+      run: |
+        echo "🔁 Action: ${{ github.event.inputs.action_type }}"
+        echo "🐳 Using Docker Image: ${{ env.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}"
+
+        RESPONSE=$(aws ecs register-task-definition \
+          --family ${SERVICE_NAME}-task \
+          --requires-compatibilities FARGATE \
+          --network-mode awsvpc \
+          --cpu "256" \
+          --memory "512" \
+          --execution-role-arn arn:aws:iam::<AWS_ACCOUNT_ID>:role/ecsTaskExecutionRole \
+          --container-definitions "[
+            {
+              \"name\": \"${CONTAINER_NAME}\",
+              \"image\": \"${IMAGE_NAME}:${{ github.event.inputs.image_tag }}\",
+              \"portMappings\": [
+                { \"containerPort\": 3000, \"protocol\": \"tcp\" }
+              ],
+              \"essential\": true
+            }
+          ]")
+
+        TASK_DEF_ARN=$(echo $RESPONSE | jq -r '.taskDefinition.taskDefinitionArn')
+        echo "task_def_arn=$TASK_DEF_ARN" >> $GITHUB_OUTPUT
+
+    - name: Update ECS Service
+      run: |
+        echo "🚀 Updating ECS service with task definition: ${{ steps.register.outputs.task_def_arn }}"
+        aws ecs update-service \
+          --cluster $CLUSTER_NAME \
+          --service $SERVICE_NAME \
+          --task-definition ${{ steps.register.outputs.task_def_arn }}
