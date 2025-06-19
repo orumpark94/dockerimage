@@ -44,9 +44,12 @@ jobs:
 
     - name: Register ECS Task Definition
       id: register
+      env:
+        EXECUTION_ROLE_ARN: ${{ secrets.ECS_EXECUTION_ROLE_ARN }}
       run: |
         echo "🔁 Action: ${{ github.event.inputs.action_type }}"
         echo "🐳 Using Docker Image: ${{ env.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}"
+        echo "🔐 Using Execution Role ARN: $EXECUTION_ROLE_ARN"
 
         RESPONSE=$(aws ecs register-task-definition \
           --family ${SERVICE_NAME}-task \
@@ -54,7 +57,7 @@ jobs:
           --network-mode awsvpc \
           --cpu "256" \
           --memory "512" \
-          --execution-role-arn arn:aws:iam::<REPLACE_ME>:role/ecsTaskExecutionRole \
+          --execution-role-arn $EXECUTION_ROLE_ARN \
           --container-definitions "[{
             \"name\": \"${CONTAINER_NAME}\",
             \"image\": \"${IMAGE_NAME}:${{ github.event.inputs.image_tag }}\",
