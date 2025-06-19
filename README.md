@@ -3,10 +3,12 @@
 
 #  프로젝트 개요
 GitHub Actions와 Terraform을 활용하여, ECS Fargate 기반 Node.js 웹 애플리케이션을 자동 배포하고,
+
 Docker 이미지 태그 기반으로 업데이트 및 롤백을 수행하는 구조를 테스트한 프로젝트입니다.
 
 
 핵심 구성
+
 CI/CD 자동화 (GitHub Actions)
 
 workflow_dispatch로 수동 트리거 (update / rollback 선택)
@@ -28,6 +30,7 @@ ECS Task 정의에 awslogs 드라이버 설정
 컨테이너 로그를 /ecs/my-app 로그 그룹으로 출력
 
 ✅ 사용 기술
+
 AWS: ECS Fargate, ALB, CloudWatch, IAM
 
 CI/CD: GitHub Actions
