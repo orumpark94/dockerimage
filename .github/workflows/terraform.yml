@@ -1,8 +1,6 @@
 name: Terraform Deploy to AWS
 
 on:
-  push:
-    branches: [ main ]  # main 브랜치 푸시 시 자동 apply
   workflow_dispatch:
     inputs:
       action:
