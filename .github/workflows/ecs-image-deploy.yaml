@@ -19,7 +19,7 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2
-  IMAGE_NAME: baram940/devops-test
+  IMAGE_NAME: baram940/devops-test         # ✅ Docker Hub 이미지
   CLUSTER_NAME: my-app-cluster
   SERVICE_NAME: my-app-service
   CONTAINER_NAME: app
@@ -54,17 +54,15 @@ jobs:
           --network-mode awsvpc \
           --cpu "256" \
           --memory "512" \
-          --execution-role-arn arn:aws:iam::<AWS_ACCOUNT_ID>:role/ecsTaskExecutionRole \
-          --container-definitions "[
-            {
-              \"name\": \"${CONTAINER_NAME}\",
-              \"image\": \"${IMAGE_NAME}:${{ github.event.inputs.image_tag }}\",
-              \"portMappings\": [
-                { \"containerPort\": 3000, \"protocol\": \"tcp\" }
-              ],
-              \"essential\": true
-            }
-          ]")
+          --execution-role-arn arn:aws:iam::<REPLACE_ME>:role/ecsTaskExecutionRole \
+          --container-definitions "[{
+            \"name\": \"${CONTAINER_NAME}\",
+            \"image\": \"${IMAGE_NAME}:${{ github.event.inputs.image_tag }}\",
+            \"portMappings\": [
+              { \"containerPort\": 3000, \"protocol\": \"tcp\" }
+            ],
+            \"essential\": true
+          }]")
 
         TASK_DEF_ARN=$(echo $RESPONSE | jq -r '.taskDefinition.taskDefinitionArn')
         echo "task_def_arn=$TASK_DEF_ARN" >> $GITHUB_OUTPUT
