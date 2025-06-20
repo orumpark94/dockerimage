@@ -58,7 +58,12 @@ jobs:
       working-directory: infra
       run: |
         echo "⚡ Running terraform action..."
-        ACTION="${{ github.event.inputs.action || 'apply' }}"
+
+        ACTION="${{ github.event.inputs.action }}"
+        if [ -z "$ACTION" ]; then
+          ACTION="apply"
+        fi
+
         echo "Selected action: $ACTION"
 
         if [ "$ACTION" = "apply" ]; then
