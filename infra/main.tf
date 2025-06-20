@@ -35,13 +35,13 @@ module "alb" {
   target_port     = 3000                            # ✅ ECS 컨테이너 포트
 }
 
-# ECS 모듈 호출
 module "ecs" {
-  source           = "./modules/ecs"
-  name             = var.name
-  image            = "baram940/devops-test:1.0"
-  container_port   = 3000
-  private_subnets  = module.vpc.private_subnets
-  tg_arn           = module.alb.target_group_arn
-  sg_id            = module.security_ecs.sg_id      # ✅ ECS SG 주입
+  source         = "./modules/ecs"
+  name           = var.name
+  image          = "baram940/devops-test:1.0"
+  container_port = 3000
+  private_subnets = module.vpc.private_subnets
+  tg_arn         = module.alb.target_group_arn
+  sg_id          = module.security_ecs.sg_id
+  region         = var.region          # ✅ 이 줄 추가
 }
