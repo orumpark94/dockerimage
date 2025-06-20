@@ -25,3 +25,8 @@ variable "sg_id" {
   description = "ECS Service에 적용할 보안 그룹 ID"
   type        = string
 }
+
+variable "region" {
+  description = "AWS region"
+  type        = string
+}
