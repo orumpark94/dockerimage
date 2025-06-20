@@ -40,3 +40,9 @@ variable "image" {
   type        = string
   default     = "baram940/devops-test:1.0"
 }
+
+variable "region" {
+  description = "AWS region"
+  type        = string
+  default     = "ap-northeast-2"  # 또는 원하는 리전
+}
