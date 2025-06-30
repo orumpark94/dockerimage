@@ -13,13 +13,13 @@ on:
           - rollback
 
       image_tag:
-        description: "Enter Docker Image Tag (e.g., 2.0, 1.0)"
+        description: "Enter Docker Image Tag (e.g., 5.0, 2.0, 1.0)"
         required: true
         default: "2.0"
 
 env:
   AWS_REGION: ap-northeast-2
-  IMAGE_NAME: baram940/devops-test         # ✅ Docker Hub 이미지
+  IMAGE_NAME: baram940/devops-test
   CLUSTER_NAME: my-app-cluster
   SERVICE_NAME: my-app-service
   CONTAINER_NAME: app
@@ -42,38 +42,48 @@ jobs:
     - name: Install jq
       run: sudo apt-get install -y jq
 
-    - name: Register ECS Task Definition
-      id: register
+    - name: Determine Task Definition ARN
+      id: task
       env:
         EXECUTION_ROLE_ARN: ${{ secrets.ECS_EXECUTION_ROLE_ARN }}
       run: |
         echo "🔁 Action: ${{ github.event.inputs.action_type }}"
-        echo "🐳 Using Docker Image: ${{ env.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}"
-        echo "🔐 Using Execution Role ARN: $EXECUTION_ROLE_ARN"
+        echo "🐳 Using Docker Image: ${IMAGE_NAME}:${{ github.event.inputs.image_tag }}"
 
-        RESPONSE=$(aws ecs register-task-definition \
-          --family ${SERVICE_NAME}-task \
-          --requires-compatibilities FARGATE \
-          --network-mode awsvpc \
-          --cpu "256" \
-          --memory "512" \
-          --execution-role-arn $EXECUTION_ROLE_ARN \
-          --container-definitions "[{
-            \"name\": \"${CONTAINER_NAME}\",
-            \"image\": \"${IMAGE_NAME}:${{ github.event.inputs.image_tag }}\",
-            \"portMappings\": [
-              { \"containerPort\": 3000, \"protocol\": \"tcp\" }
-            ],
-            \"essential\": true
-          }]")
+        if [ "${{ github.event.inputs.action_type }}" == "update" ]; then
+          echo "📦 Registering new task definition..."
+          RESPONSE=$(aws ecs register-task-definition \
+            --family ${SERVICE_NAME}-task \
+            --requires-compatibilities FARGATE \
+            --network-mode awsvpc \
+            --cpu "256" \
+            --memory "512" \
+            --execution-role-arn $EXECUTION_ROLE_ARN \
+            --container-definitions "[{
+              \"name\": \"${CONTAINER_NAME}\",
+              \"image\": \"${IMAGE_NAME}:${{ github.event.inputs.image_tag }}\",
+              \"portMappings\": [
+                { \"containerPort\": 3000, \"protocol\": \"tcp\" }
+              ],
+              \"essential\": true
+            }]")
 
-        TASK_DEF_ARN=$(echo $RESPONSE | jq -r '.taskDefinition.taskDefinitionArn')
-        echo "task_def_arn=$TASK_DEF_ARN" >> $GITHUB_OUTPUT
+          TASK_DEF_ARN=$(echo $RESPONSE | jq -r '.taskDefinition.taskDefinitionArn')
+          echo "✅ New Task Definition: $TASK_DEF_ARN"
+        else
+          echo "📦 Fetching previous task definition for rollback..."
+          TASKS=$(aws ecs list-task-definitions --family-prefix ${SERVICE_NAME}-task --sort DESC --status ACTIVE)
+          TASK_DEF_ARN=$(echo $TASKS | jq -r '.taskDefinitionArns[1]')
+          echo "✅ Previous Task Definition (rollback): $TASK_DEF_ARN"
+        fi
+
+        echo "task_def_arn=$TASK_DEF_ARN" >> $GITHUB_ENV
 
     - name: Update ECS Service
       run: |
-        echo "🚀 Updating ECS service with task definition: ${{ steps.register.outputs.task_def_arn }}"
+        echo "🚀 Updating ECS service with task definition: $task_def_arn"
+
         aws ecs update-service \
           --cluster $CLUSTER_NAME \
           --service $SERVICE_NAME \
-          --task-definition ${{ steps.register.outputs.task_def_arn }}
+          --task-definition $task_def_arn

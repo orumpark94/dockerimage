@@ -18,3 +18,9 @@ variable "alb_sg_id" {
   type        = string
   default     = ""
 }
+
+variable "ecs_sg_id" {
+  description = "ECS security group ID (for DB to allow access from ECS)"
+  type        = string
+  default     = ""
+}

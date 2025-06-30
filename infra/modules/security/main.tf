@@ -10,6 +10,7 @@ locals {
         cidr_blocks = ["0.0.0.0/0"]
       }]
     }
+
     ecs = {
       name        = "${var.name}-ecs-sg"
       description = "ECS security group"
@@ -18,6 +19,17 @@ locals {
         to_port         = 3000
         protocol        = "tcp"
         security_groups = [var.alb_sg_id]
+      }]
+    }
+
+    db = {
+      name        = "${var.name}-db-sg"
+      description = "DB security group"
+      ingress     = [{
+        from_port       = 3306
+        to_port         = 3306
+        protocol        = "tcp"
+        security_groups = [var.ecs_sg_id]
       }]
     }
   }

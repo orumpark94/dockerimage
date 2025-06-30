@@ -46,3 +46,21 @@ variable "region" {
   type        = string
   default     = "ap-northeast-2"  # 또는 원하는 리전
 }
+
+variable "db_name" {
+  description = "DB 이름"
+  type        = string
+  default     = "myappdb"
+}
+
+variable "db_user" {
+  description = "DB 사용자명"
+  type        = string
+  default     = "admin"
+}
+
+variable "db_password" {
+  description = "DB 비밀번호 (GitHub Actions에서 secrets로 전달)"
+  type        = string
+  sensitive   = true
+}
