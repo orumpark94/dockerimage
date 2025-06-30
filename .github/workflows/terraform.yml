@@ -52,7 +52,9 @@ jobs:
       working-directory: infra
       run: |
         echo "📐 Running terraform plan..."
-        terraform plan -input=false -no-color
+        terraform plan \
+          -var="db_password=${{ secrets.DB_PASSWORD }}" \
+          -input=false -no-color
 
     - name: 🚀 Terraform Apply or Destroy
       working-directory: infra
@@ -67,9 +69,13 @@ jobs:
         echo "Selected action: $ACTION"
 
         if [ "$ACTION" = "apply" ]; then
-          terraform apply -input=false -auto-approve -no-color
+          terraform apply \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -input=false -auto-approve -no-color
         elif [ "$ACTION" = "destroy" ]; then
-          terraform destroy -input=false -auto-approve -no-color
+          terraform destroy \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -input=false -auto-approve -no-color
         else
           echo "❌ Invalid action: $ACTION"
           exit 1
