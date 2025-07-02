@@ -103,26 +103,3 @@ resource "aws_ecs_task_definition" "task" {
 
   depends_on = [aws_cloudwatch_log_group.ecs_log_group]
 }
-
-# ✅ ECS 서비스
-resource "aws_ecs_service" "service" {
-  name            = "${var.name}-service"
-  cluster         = aws_ecs_cluster.cluster.id
-  launch_type     = "FARGATE"
-  task_definition = aws_ecs_task_definition.task.arn
-  desired_count   = 1
-
-  network_configuration {
-    subnets         = var.private_subnets
-    security_groups = [var.sg_id]
-    assign_public_ip = false
-  }
-
-  load_balancer {
-    target_group_arn = var.tg_arn
-    container_name   = "app"
-    container_port   = var.container_port
-  }
-
-  depends_on = [aws_ecs_task_definition.task]
-}
