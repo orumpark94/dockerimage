@@ -10,3 +10,4 @@ output "db_name" {
 output "db_user" {
   value = var.db_user
 }
+

@@ -1,10 +1,4 @@
-# ✅ CloudWatch Log Group 생성 (ECS 로그용)
-resource "aws_cloudwatch_log_group" "ecs_log_group" {
-  name              = "/ecs/${var.name}"
-  retention_in_days = 7
-}
-
-# ✅ IAM Role (로그 전송 권한 포함) → [기존 구성 유지]
+# ✅ IAM Role (로그 전송 권한 포함) → [유지]
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "${var.name}-ecs-task-execution-role"
   assume_role_policy = jsonencode({
@@ -30,10 +24,10 @@ resource "aws_ecs_cluster" "cluster" {
   name = "${var.name}-cluster"
 }
 
-# ✅ 현재 계정 정보 조회 (account_id 사용) → [🔧 새로 추가됨]
+# ✅ 현재 계정 정보 조회
 data "aws_caller_identity" "current" {}
 
-# ✅ Task Role (SSM 접근을 위한 IAM Role) → [🔧 새로 추가됨]
+# ✅ Task Role (SSM 접근용)
 resource "aws_iam_role" "ecs_task_role" {
   name = "${var.name}-ecs-task-role"
 
@@ -49,7 +43,7 @@ resource "aws_iam_role" "ecs_task_role" {
   })
 }
 
-# ✅ Task Role에 SSM 읽기 권한 부여 → [🔧 새로 추가됨]
+# ✅ SSM 읽기 권한 정책 + 연결
 resource "aws_iam_policy" "ssm_read_policy" {
   name = "${var.name}-ssm-read-policy"
 
@@ -81,8 +75,8 @@ resource "aws_ecs_task_definition" "task" {
   cpu                      = "256"
   memory                   = "512"
 
-  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn        # 로그용 Role
-  task_role_arn      = aws_iam_role.ecs_task_role.arn                  # 🔧 SSM 접근용 Role
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn      = aws_iam_role.ecs_task_role.arn
 
   container_definitions = jsonencode([{
     name  = "app"
@@ -94,14 +88,12 @@ resource "aws_ecs_task_definition" "task" {
     logConfiguration = {
       logDriver = "awslogs"
       options = {
-        awslogs-group         = "/ecs/${var.name}"
+        awslogs-group         = var.log_group_name           # ✅ 외부에서 주입
         awslogs-region        = var.region
         awslogs-stream-prefix = "ecs"
       }
     }
   }])
-
-  depends_on = [aws_cloudwatch_log_group.ecs_log_group]
 }
 
 # ✅ ECS 서비스
