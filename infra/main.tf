@@ -1,3 +1,16 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 4.0.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.region
+}
+
 # VPC 모듈 호출
 module "vpc" {
   source                = "./modules/vpc"
@@ -54,6 +67,7 @@ module "ecs" {
   tg_arn          = module.alb.target_group_arn
   sg_id           = module.security_ecs.sg_id
   region          = var.region
+  ecs_cluster_name = module.ecs_cluster.name
 }
 
 # ✅ DB 모듈은 다음 단계에서 추가 예정 (SG 준비 완료 상태)
@@ -66,4 +80,18 @@ module "db" {
   db_password     = var.db_password
   db_subnet_ids   = module.vpc.private_subnets
   db_sg_id        = module.security_db.sg_id
+  db_endpoint     = module.db.db_endpoint
+}
+
+module "cloudwatch" {
+  source                    = "./modules/cloudwatch"
+  name                      = var.name
+  region                    = var.region
+  email                     = var.alert_email                  # 이메일 주소 직접 전달
+  retention_days            = 7
+
+  ecs_cluster_name          = module.ecs.cluster_name
+  ecs_service_name          = module.ecs.service_name          # ECS 서비스 이름 output 필요
+  rds_instance_id           = module.db.rds_instance_id        # DB 모듈에서 output 필요
+  rds_memory_threshold_bytes = 214748364                       # 또는 var로 받아도 OK
 }

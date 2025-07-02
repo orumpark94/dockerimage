@@ -1,8 +1,3 @@
-# ✅ CloudWatch Log Group 생성 (ECS 로그용)
-resource "aws_cloudwatch_log_group" "ecs_log_group" {
-  name              = "/ecs/${var.name}"
-  retention_in_days = 7
-}
 
 # ✅ IAM Role (로그 전송 권한 포함) → [기존 구성 유지]
 resource "aws_iam_role" "ecs_task_execution_role" {
@@ -94,7 +89,7 @@ resource "aws_ecs_task_definition" "task" {
     logConfiguration = {
       logDriver = "awslogs"
       options = {
-        awslogs-group         = "/ecs/${var.name}"
+        awslogs-group         = "/ecs/${var.ecs_cluster_name}"
         awslogs-region        = var.region
         awslogs-stream-prefix = "ecs"
       }
@@ -102,4 +97,26 @@ resource "aws_ecs_task_definition" "task" {
   }])
 
   depends_on = [aws_cloudwatch_log_group.ecs_log_group]
+}
+
+resource "aws_ecs_service" "service" {
+  name            = "${var.name}-service"
+  cluster         = aws_ecs_cluster.cluster.id
+  task_definition = aws_ecs_task_definition.task.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets         = var.private_subnets
+    security_groups = [var.sg_id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = var.tg_arn
+    container_name   = "app"
+    container_port   = var.container_port
+  }
+
+  depends_on = [aws_iam_role.ecs_task_execution_role]
 }

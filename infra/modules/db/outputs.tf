@@ -10,3 +10,8 @@ output "db_name" {
 output "db_user" {
   value = var.db_user
 }
+
+output "rds_instance_id" {
+  description = "RDS 인스턴스 ID"
+  value       = aws_db_instance.this.id
+}

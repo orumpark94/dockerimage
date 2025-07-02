@@ -40,7 +40,7 @@ jobs:
       working-directory: infra
       run: |
         echo "🔧 Running terraform init..."
-        terraform init -no-color
+        terraform init -upgrade -no-color
 
     - name: ✅ Terraform Validate
       working-directory: infra
