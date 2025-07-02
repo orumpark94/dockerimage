@@ -67,7 +67,6 @@ module "ecs" {
   tg_arn          = module.alb.target_group_arn
   sg_id           = module.security_ecs.sg_id
   region          = var.region
-  ecs_cluster_name = module.ecs_cluster.name
 }
 
 # ✅ DB 모듈은 다음 단계에서 추가 예정 (SG 준비 완료 상태)
