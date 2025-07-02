@@ -30,8 +30,3 @@ variable "region" {
   description = "AWS region"
   type        = string
 }
-
-variable "log_group_name" {
-  description = "CloudWatch Log Group name (예: /ecs/my-app)"
-  type        = string
-}

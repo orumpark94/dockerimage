@@ -54,7 +54,6 @@ module "ecs" {
   tg_arn          = module.alb.target_group_arn
   sg_id           = module.security_ecs.sg_id
   region          = var.region
-  log_group_name  = "/ecs/${var.name}-cluster"
 }
 
 # ✅ DB 모듈은 다음 단계에서 추가 예정 (SG 준비 완료 상태)
@@ -67,19 +66,4 @@ module "db" {
   db_password     = var.db_password
   db_subnet_ids   = module.vpc.private_subnets
   db_sg_id        = module.security_db.sg_id
-}
-
-module "cloudwatch" {
-  source = "./modules/cloudwatch" # 실제 경로에 맞게 조정
-
-  name                   = var.name
-  region                 = var.region
-  alarm_email            = var.alarm_email
-
-  ecs_cluster_name       = module.ecs.cluster_name
-  ecs_service_name       = module.ecs.service_name
-  log_group_name         = module.ecs.log_group_name
-
-  rds_identifier         = module.db.rds_identifier
-  rds_memory_threshold_bytes = 214748364 # 예: 200MB
 }

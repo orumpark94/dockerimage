@@ -64,14 +64,3 @@ variable "db_password" {
   type        = string
   sensitive   = true
 }
-
-variable "alarm_email" {
-  description = "CloudWatch 알람 수신 이메일 주소"
-  type        = string
-}
-
-variable "rds_memory_threshold_bytes" {
-  description = "RDS 메모리 임계값 (FreeableMemory 기준)"
-  type        = number
-  default     = 214748364  # 200MB
-}
