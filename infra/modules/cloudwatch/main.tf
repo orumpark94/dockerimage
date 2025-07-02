@@ -14,12 +14,12 @@ resource "aws_sns_topic_subscription" "email_alert" {
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   alarm_name          = "${var.name}-ecs-cpu-high"
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
+  evaluation_periods  = 1
   metric_name         = "CPUUtilization"
   namespace           = "AWS/ECS"
   period              = 60
   statistic           = "Average"
-  threshold           = 70
+  threshold           = 1
   alarm_description   = "ECS CPU usage is above 70%"
   alarm_actions       = [aws_sns_topic.alarm_topic.arn]
 
@@ -52,12 +52,12 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
 resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
   alarm_name          = "${var.name}-rds-cpu-high"
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
+  evaluation_periods  = 1
   metric_name         = "CPUUtilization"
   namespace           = "AWS/RDS"
   period              = 60
   statistic           = "Average"
-  threshold           = 70
+  threshold           = 1
   alarm_description   = "RDS CPU usage is above 70%"
   alarm_actions       = [aws_sns_topic.alarm_topic.arn]
 
