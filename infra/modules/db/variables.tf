@@ -19,6 +19,7 @@ variable "db_password" {
   sensitive   = true
 }
 
+
 variable "db_subnet_ids" {
   description = "List of private subnet IDs for RDS deployment"
   type        = list(string)

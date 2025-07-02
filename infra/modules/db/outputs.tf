@@ -15,3 +15,9 @@ output "rds_instance_id" {
   description = "RDS 인스턴스 ID"
   value       = aws_db_instance.this.id
 }
+
+# ✅ modules/db/outputs.tf
+output "db_identifier" {
+  value       = aws_db_instance.this.id
+  description = "RDS DB Identifier"
+}

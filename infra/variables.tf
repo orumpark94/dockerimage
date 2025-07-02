@@ -65,7 +65,8 @@ variable "db_password" {
   sensitive   = true
 }
 
-variable "alert_email" {
+# 알림 이메일 변수 이름을 CloudWatch 모듈에서 사용한 것과 동일하게 변경
+variable "alarm_email" {
   description = "알람 수신용 이메일 주소"
   type        = string
 }

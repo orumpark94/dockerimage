@@ -1,7 +1,7 @@
 resource "aws_ssm_parameter" "db_host" {
   name  = "/app/DB_HOST"
   type  = "SecureString"
-  value = var.db_endpoint  # ✅ output으로 받은 값 사용
+  value = aws_db_instance.this.address
 }
 
 resource "aws_ssm_parameter" "db_user" {

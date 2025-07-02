@@ -80,18 +80,18 @@ module "db" {
   db_password     = var.db_password
   db_subnet_ids   = module.vpc.private_subnets
   db_sg_id        = module.security_db.sg_id
-  db_endpoint     = module.db.db_endpoint
+  
 }
 
 module "cloudwatch" {
-  source                    = "./modules/cloudwatch"
-  name                      = var.name
-  region                    = var.region
-  email                     = var.alert_email                  # 이메일 주소 직접 전달
-  retention_days            = 7
+  source               = "./modules/cloudwatch"
+  name                 = var.name
+  region               = var.region
+  alarm_email          = "nowd940@gmail.com"
 
-  ecs_cluster_name          = module.ecs.cluster_name
-  ecs_service_name          = module.ecs.service_name          # ECS 서비스 이름 output 필요
-  rds_instance_id           = module.db.rds_instance_id        # DB 모듈에서 output 필요
-  rds_memory_threshold_bytes = 214748364                       # 또는 var로 받아도 OK
+  ecs_cluster_name     = module.ecs.ecs_cluster_name
+  ecs_service_name     = module.ecs.ecs_service_name
+
+  rds_identifier       = module.db.db_identifier
+  rds_memory_threshold = 524288000  # 500MB
 }

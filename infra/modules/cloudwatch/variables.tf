@@ -1,41 +1,37 @@
 variable "name" {
-  description = "리소스 이름 prefix"
-  type        = string
-}
-
-variable "email" {
-  description = "알람을 수신할 이메일 주소"
+  description = "Prefix name used for resource naming"
   type        = string
 }
 
 variable "region" {
-  description = "AWS 리전 (예: ap-northeast-2)"
+  description = "AWS region"
   type        = string
 }
 
-variable "retention_days" {
-  description = "CloudWatch 로그 보관 기간 (일 단위)"
-  type        = number
-  default     = 7
+variable "alarm_email" {
+  description = "Email address to receive CloudWatch alarms"
+  type        = string
 }
 
+# ECS 관련 변수
 variable "ecs_cluster_name" {
-  description = "ECS 클러스터 이름"
+  description = "ECS Cluster Name"
   type        = string
 }
 
 variable "ecs_service_name" {
-  description = "ECS 서비스 이름"
+  description = "ECS Service Name"
   type        = string
 }
 
-variable "rds_instance_id" {
-  description = "RDS 인스턴스 ID (DBInstanceIdentifier)"
+# RDS 관련 변수
+variable "rds_identifier" {
+  description = "RDS DB Instance Identifier"
   type        = string
 }
 
-variable "rds_memory_threshold_bytes" {
-  description = "RDS FreeableMemory 임계값 (bytes)"
+variable "rds_memory_threshold" {
+  description = "Memory usage threshold in bytes (e.g. 500MB = 524288000)"
   type        = number
-  default     = 214748364  # 200MB
+  default     = 524288000  # 예시: FreeableMemory가 500MB 미만일 경우 알람
 }

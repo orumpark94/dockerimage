@@ -1,33 +1,16 @@
-resource "aws_cloudwatch_log_group" "ecs_log_group" {
-  name              = "/ecs/${var.ecs_cluster_name}"
-  retention_in_days = var.retention_days
+# ✅ SNS Topic 생성
+resource "aws_sns_topic" "alarm_topic" {
+  name = "${var.name}-alarm-topic"
 }
 
-resource "aws_cloudwatch_log_metric_filter" "ecs_error_filter" {
-  name           = "${var.name}-ecs-error-filter"
-  log_group_name = aws_cloudwatch_log_group.ecs_log_group.name
-  pattern        = "?ERROR ?Error ?error"
-
-  metric_transformation {
-    name      = "${var.name}-error-count"
-    namespace = "ECS/Logs"
-    value     = "1"
-  }
+# ✅ 이메일 구독자 등록
+resource "aws_sns_topic_subscription" "email_alert" {
+  topic_arn = aws_sns_topic.alarm_topic.arn
+  protocol  = "email"
+  endpoint  = var.alarm_email
 }
 
-resource "aws_cloudwatch_metric_alarm" "ecs_error_alarm" {
-  alarm_name          = "${var.name}-ecs-error-alarm"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = 1
-  metric_name         = aws_cloudwatch_log_metric_filter.ecs_error_filter.metric_transformation[0].name
-  namespace           = "ECS/Logs"
-  period              = 60
-  statistic           = "Sum"
-  threshold           = 1
-  alarm_description   = "Detect ERROR logs in ECS"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
-}
-
+# ✅ ECS CPU 알람
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   alarm_name          = "${var.name}-ecs-cpu-high"
   comparison_operator = "GreaterThanThreshold"
@@ -37,8 +20,8 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   period              = 60
   statistic           = "Average"
   threshold           = 70
-  alarm_description   = "ECS CPU > 70%"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  alarm_description   = "ECS CPU usage is above 70%"
+  alarm_actions       = [aws_sns_topic.alarm_topic.arn]
 
   dimensions = {
     ClusterName = var.ecs_cluster_name
@@ -46,6 +29,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   }
 }
 
+# ✅ ECS Memory 알람
 resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
   alarm_name          = "${var.name}-ecs-memory-high"
   comparison_operator = "GreaterThanThreshold"
@@ -55,8 +39,8 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
   period              = 60
   statistic           = "Average"
   threshold           = 80
-  alarm_description   = "ECS Memory > 80%"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  alarm_description   = "ECS Memory usage is above 80%"
+  alarm_actions       = [aws_sns_topic.alarm_topic.arn]
 
   dimensions = {
     ClusterName = var.ecs_cluster_name
@@ -64,6 +48,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
   }
 }
 
+# ✅ RDS CPU 알람
 resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
   alarm_name          = "${var.name}-rds-cpu-high"
   comparison_operator = "GreaterThanThreshold"
@@ -73,43 +58,39 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
   period              = 60
   statistic           = "Average"
   threshold           = 70
-  alarm_description   = "RDS CPU > 70%"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  alarm_description   = "RDS CPU usage is above 70%"
+  alarm_actions       = [aws_sns_topic.alarm_topic.arn]
 
   dimensions = {
-    DBInstanceIdentifier = var.rds_instance_id
+    DBInstanceIdentifier = var.rds_identifier
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "rds_memory_low" {
-  alarm_name          = "${var.name}-rds-low-memory"
-  comparison_operator = "LessThanThreshold"
+# ✅ RDS Memory 알람
+resource "aws_cloudwatch_metric_alarm" "rds_memory_high" {
+  alarm_name          = "${var.name}-rds-memory-high"
+  comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "FreeableMemory"
   namespace           = "AWS/RDS"
   period              = 60
   statistic           = "Average"
-  threshold           = var.rds_memory_threshold_bytes
-  alarm_description   = "RDS memory low"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  threshold           = var.rds_memory_threshold  # 메모리 부족 기준 (바이트 단위)
+  alarm_description   = "RDS Memory usage is high"
+  alarm_actions       = [aws_sns_topic.alarm_topic.arn]
 
   dimensions = {
-    DBInstanceIdentifier = var.rds_instance_id
+    DBInstanceIdentifier = var.rds_identifier
   }
 }
 
-# ✅ SNS Topic 및 이메일 구독
-resource "aws_sns_topic" "alerts" {
-  name = "${var.name}-alerts"
+# ✅ RDS 슬로우 쿼리 로그 그룹 (로그 저장)
+resource "aws_cloudwatch_log_group" "rds_slow_query" {
+  name              = "/aws/rds/instance/${var.rds_identifier}/slowquery"
+  retention_in_days = 7
 }
 
-resource "aws_sns_topic_subscription" "email_alert" {
-  topic_arn = aws_sns_topic.alerts.arn
-  protocol  = "email"
-  endpoint  = var.email
-}
-
-# ✅ CloudWatch Dashboard (시각화)
+# ✅ CloudWatch Dashboard
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "${var.name}-dashboard"
 
@@ -119,36 +100,34 @@ resource "aws_cloudwatch_dashboard" "main" {
         type = "metric",
         x    = 0,
         y    = 0,
-        width  = 12,
+        width = 12,
         height = 6,
         properties = {
+          title = "ECS CPU & Memory",
           metrics = [
             [ "AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", var.ecs_service_name ],
             [ ".", "MemoryUtilization", ".", ".", ".", "." ]
           ],
-          title     = "ECS CPU / Memory",
-          period    = 60,
-          stat      = "Average",
-          view      = "timeSeries",
-          region    = var.region
+          view = "timeSeries",
+          stacked = false,
+          region = var.region
         }
       },
       {
         type = "metric",
-        x    = 12,
-        y    = 0,
-        width  = 12,
+        x    = 0,
+        y    = 7,
+        width = 12,
         height = 6,
         properties = {
+          title = "RDS CPU & FreeableMemory",
           metrics = [
-            [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.rds_instance_id ],
+            [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.rds_identifier ],
             [ ".", "FreeableMemory", ".", "." ]
           ],
-          title     = "RDS CPU / Memory",
-          period    = 60,
-          stat      = "Average",
-          view      = "timeSeries",
-          region    = var.region
+          view = "timeSeries",
+          stacked = false,
+          region = var.region
         }
       }
     ]
