@@ -35,7 +35,3 @@ variable "ecs_cluster_name" {
   description = "ECS 클러스터 이름 (CloudWatch 로그 그룹 참조용)"
   type        = string
 }
-
-variable "tg_arn" {
-  type = string
-}
